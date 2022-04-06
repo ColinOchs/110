@@ -65,14 +65,17 @@ def product_count():
 # /api/catalog/total  ->  total of products in the catalog
 
 @app.route("/api/catalog/total")
-def catalog_total():
+def total_of_catalog():
+    
     total = 0
     cursor = db.products.find({})
     for prod in cursor:
-        total+=prod["price"]
+        total += prod["price"] 
+
     return json.dumps(total)
 
 # get /api/product/wasdfalglkj3456g
+
 
 @app.route("/api/product/<id>")
 def get_by_id(id):
