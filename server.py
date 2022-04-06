@@ -1,5 +1,5 @@
 import json
-
+from math import prod
 from flask import Flask, abort, request
 from mock_data import catalog
 from config import db
@@ -79,7 +79,7 @@ def get_by_id(id):
     #find the product with _id is equal to id
     
     prod = db.products.find_one({ "_id": ObjectId(id) })
-
+   
     if not prod:
           ## if not found return 404 
      return abort(404, "no such product can be located")
@@ -113,9 +113,9 @@ def cheapest_product():
 def unique_categories():
     categories = []
     for prod in catalog:
-        cat = prod["category"]
-        if not cat in categories:
-            categories.append(cat)
+        category = prod["category"]
+        if not category in categories:
+            categories.append(category)
     return json.dumps(categories)
 
 
@@ -155,43 +155,37 @@ def some_numbers():
 
 
 allCoupons = []
-#create the GET /api/couponCode
 
 @app.route("/api/couponCode", methods = ["GET"])
 def get_coupons():
 
-    codes = []
-    cursor = db.coupons.find({}) #cursor is a collection
-
+    coupons = []
+    cursor = db.couponCodes.find({}) #cursor is a collection
     for code in cursor:
         code["_id"] = str(code["_id"])
-        allCoupons.append(code)
+        coupons.append(code)
 
-    return json.dumps(allCoupons)
+    return json.dumps(coupons)
 
 
-#create the POST  /api/couponCode
-#get the coupon from the request and 
-#adding an _id
-#add it to all coupons
-#return the coupon as json
-#app.post("/api/couponCode") same as below
 
 @app.route("/api/couponCode", methods=["POST"])
 
 def save_coupon():
   coupon = request.get_json()
-  db.coupon.insert_one(coupon)
-  coupon["_id"] = str(coupon["_id"])
+  db.couponCodes.insert_one(coupon)
 
+  coupon["_id"] = str(coupon["_id"])
   return json.dumps(coupon)
   
-@app.get("/api/couponCode/<code>")
+@app.route("/api/couponCode/<code>")
 def get_coupon_by_code(code):
   
-    coupon = db.coupons.find_one({"code" : code})
+    coupon = db.couponCodes.find_one({"code": code})
     if not coupon:
-        return abort(404, coupon code)
+
+        return abort(404, "Invalid Code, Try again...")
+
     coupon["_id"] = str(coupon["_id"])
    
     return json.dumps(coupon)
