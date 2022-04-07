@@ -34,7 +34,7 @@ def get_catalog():
         prod["_id"] = str(prod["_id"])
         products.append(prod)
 
-        return json.dumps(products)
+    return json.dumps(products)
 
 @app.route("/api/catalog", methods=["post"])
 def save_product():
@@ -176,6 +176,19 @@ def get_coupons():
 
 def save_coupon():
   coupon = request.get_json()
+
+#must contain code, discount
+#code should have at least 5 chars
+#discount should not be lower 5 than and not greater than 50
+  if not "code" in coupon or not "discount" in coupon:
+      return abort(400, "no siree bob, must have code and discount")
+  
+  if len(coupon["code"]) < 5:
+      return abort(400, "coupon must contain minimum character set")
+  
+  if (coupon["discount"]) < 5 or (coupon["discount"]) > 50:
+      return abort(400, "nice try sneaky sneakerson...")
+
   db.couponCodes.insert_one(coupon)
 
   coupon["_id"] = str(coupon["_id"])
@@ -192,6 +205,73 @@ def get_coupon_by_code(code):
     coupon["_id"] = str(coupon["_id"])
    
     return json.dumps(coupon)
+
+
+##########################################
+############# USER ENDPOINTS #####
+##########################################
+
+allUsers =[]
+
+@app.route("/api/users", methods=["GET"])
+def get_users():
+
+    all_users = []
+    cursor = db.users.find({})
+    for user in cursor:
+        user["_id"] = str(user["_id"])
+        all_users.append(user)
+
+    return json.dumps(all_users)
+
+@app.route("/api/users", methods=["POST"])
+
+def save_user():
+  user = request.get_json()
+
+  if not "username" in user or not "password" in user or not "email" in user:
+      return abort(400, "no dice, Rocko..., Object must contain username, email and password")
+
+    #check that the values are not empty
+  if len(user["username"]) < 1 or len(user["password"]) < 1 or len(user["email"]) <1:
+      return abort(400, "nope, try again... must contain all values...")
+
+  db.users.insert_one(user)
+  
+  user["_id"] = str(user["_id"])
+  return json.dumps(user)
+
+
+@app.route("/api/users/<email>")
+def find_user_by_email(email):
+  
+    user = db.users.find_one({"email": email})
+    if not user:
+
+        return abort(404, "Invalid User Email, Try again...")
+
+    user["_id"] = str(user["_id"])
+   
+    return json.dumps(user)
+
+
+@app.route("/api/login", methods=["POST"])
+def validate_user_data():
+    data = request.get_json()  #  <----dict with user and password
+ 
+    #if no user in data, return a 400 error
+    if not "user" in data:
+        return abort(400, "user is required for login")
+    if not "password" in data:
+        return abort(400, "password is required for login, you sheisty bozo")    
+
+    user = db.users.find_one({"username": data["user"], "password": data["password"]})
+    if not user:
+        abort(401, "Invalid Credentials, bugger off!")
+
+    user["_id"] = str(user["_id"])
+    user.pop("password") #remove the key and value from the dict
+    return json.dumps(user)
 
 
 app.run(debug=True)
