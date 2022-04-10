@@ -4,10 +4,10 @@ from flask import Flask, abort, request
 from mock_data import catalog
 from config import db
 from bson import ObjectId
-
+from flask_cors import CORS
 
 app = Flask("Server")
-
+CORS(app) 
 
 @app.route("/")
 def home():
@@ -192,6 +192,7 @@ def save_coupon():
   db.couponCodes.insert_one(coupon)
 
   coupon["_id"] = str(coupon["_id"])
+  
   return json.dumps(coupon)
   
 @app.route("/api/couponCode/<code>")
@@ -230,7 +231,7 @@ def save_user():
   user = request.get_json()
 
   if not "username" in user or not "password" in user or not "email" in user:
-      return abort(400, "no dice, Rocko..., Object must contain username, email and password")
+      return abort(400, "Object must contain username, email and password")
 
     #check that the values are not empty
   if len(user["username"]) < 1 or len(user["password"]) < 1 or len(user["email"]) <1:
@@ -263,11 +264,11 @@ def validate_user_data():
     if not "user" in data:
         return abort(400, "user is required for login")
     if not "password" in data:
-        return abort(400, "password is required for login, you sheisty bozo")    
+        return abort(400, "password is required for login")    
 
     user = db.users.find_one({"username": data["user"], "password": data["password"]})
     if not user:
-        abort(401, "Invalid Credentials, bugger off!")
+        abort(401, "Invalid Credentials")
 
     user["_id"] = str(user["_id"])
     user.pop("password") #remove the key and value from the dict
